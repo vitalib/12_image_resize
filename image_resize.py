@@ -49,10 +49,12 @@ def verify_arguments(scale, width, height, image_size):
                     '--scale or (--width and/or --height)'
                              )
               )
-        sys.exit(1)
+        return None
+
     if scale and (width or height):
         print('error: --scale and --width|--height are mutually exclusive')
-        sys.exit(1)
+        return None
+
     if height and width:
         init_width, init_height = image_size
         difference = 10 ** (-5)
@@ -67,7 +69,9 @@ def verify_arguments(scale, width, height, image_size):
 if __name__ == '__main__':
     args = get_arguments()
     image = Image.open(args.image_path)
-    verify_arguments(args.scale, args.width, args.height, image.size)
+    if verify_arguments(args.scale, args.width,
+                        args.height, image.size) is None:
+        sys.exit(1)
     new_size = get_new_size(image.size, args.scale, args.width, args.height)
     resized_image = image.resize(new_size)
     output_image_path = get_output_image_path(
