@@ -20,7 +20,18 @@ def get_arguments():
     parser.add_argument('-o', '--output_image_path',
                         help='path for resized image'
                         )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if not any((args.scale, args.width, args.height)):
+        print('{} {}'.format(
+                    'error: the following arguments are required:',
+                    '--scale or (--width and/or --height)'
+                             )
+              )
+        return None
+    if args.scale and (args.width or args.height):
+        print('error: --scale and --width|--height are mutually exclusive')
+        return None
+    return args
 
 
 def get_new_size(initial_size, scale, width, height):
@@ -42,19 +53,7 @@ def get_output_image_path(output_path, input_path, image_size):
     return output_path
 
 
-def verify_arguments(scale, width, height, image_size):
-    if not any((scale, width, height)):
-        print('{} {}'.format(
-                    'error: the following arguments are required:',
-                    '--scale or (--width and/or --height)'
-                             )
-              )
-        return None
-
-    if scale and (width or height):
-        print('error: --scale and --width|--height are mutually exclusive')
-        return None
-
+def verify_arguments(width, height, image_size):
     if height and width:
         init_width, init_height = image_size
         difference = 10 ** (-5)
@@ -68,10 +67,10 @@ def verify_arguments(scale, width, height, image_size):
 
 if __name__ == '__main__':
     args = get_arguments()
-    image = Image.open(args.image_path)
-    if verify_arguments(args.scale, args.width,
-                        args.height, image.size) is None:
+    if args is None:
         sys.exit(1)
+    image = Image.open(args.image_path)
+    verify_arguments(args.width, args.height, image.size)
     new_size = get_new_size(image.size, args.scale, args.width, args.height)
     resized_image = image.resize(new_size)
     output_image_path = get_output_image_path(
@@ -79,4 +78,4 @@ if __name__ == '__main__':
                                         args.image_path,
                                         new_size,
                                               )
-    resized_image = image.save(output_image_path)
+    resized_image.save(output_image_path)
